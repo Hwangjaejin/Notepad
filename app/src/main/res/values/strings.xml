@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Notepad</string>
+
+    <string-array name="cameraItem">
+        <item>"카메라로 촬영하기"</item>
+        <item>"갤러리에서 가져오기"</item>
+        <item>"이미지 붙여넣기"</item>
+    </string-array>
 </resources>

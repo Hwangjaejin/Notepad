@@ -4,11 +4,19 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,12 +32,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
+import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.model.PictureItem;
-import com.example.notepad.model.PictureViewer;
 import com.google.android.material.tabs.TabLayout;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -43,16 +53,19 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private GridView gridview;
     private EditText edit_title,edit_detail;
     private ScrollView scrollView_edit, scrollView_text;
-    private Button save_button;
     private ImageView imageView;
     private Toolbar toolbar;
     private boolean menu_flag = false;
     private PictureAdapter pictureAdapter;
+    private PictureItem pictureItem;
+    private ArrayList<PictureItem> pictureItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo);
+
+        imageView = findViewById(R.id.imgtest);
 
         scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
         scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
@@ -101,54 +114,28 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-        /*
-        scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
-        scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
-        scrollView_edit.setVisibility(View.GONE);
-        scrollView_text.setVisibility(View.VISIBLE);
-        */
-        //save_button = (Button)findViewById(R.id.save_btn);
-        //save_button.setOnClickListener(this);
         edit_title = (EditText)findViewById(R.id.memo_title_edit);
         edit_detail = (EditText)findViewById(R.id.memo_detail_edit);
         edit_title.setOnClickListener(this);
         edit_detail.setOnClickListener(this);
 
-        pictureAdapter = new PictureAdapter();
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-        pictureAdapter.addItem(new PictureItem(R.drawable.ic_photo_camera_black_24dp));
-
-        gridview.setAdapter(pictureAdapter);
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("jaejin",position+"");
-            }
-        });
+//        pictureAdapter = new PictureAdapter(MemoActivity.this);
+//        pictureAdapter.addItem(new PictureItem(ContextCompat.getDrawable(this,R.drawable.ic_photo_camera_black_24dp)));
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(requestCode == PICK_FROM_GALLERY){
-            if(resultCode == RESULT_OK){
-                try{
-                    Log.d("jaejin","success");
-                    InputStream in = getContentResolver().openInputStream(data.getData());
-                    Bitmap img = BitmapFactory.decodeStream(in);
-                    in.close();
-                    imageView.setImageBitmap(img);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
+        super.onActivityResult(requestCode,resultCode,data);
+
+        if(requestCode == PICK_FROM_GALLERY && resultCode == RESULT_OK){
+            Uri uri = data.getData();
+
+            pictureItem = new PictureItem();
+            pictureItem.setUri(uri);
+            pictureItems.add(pictureItem);
+            pictureAdapter = new PictureAdapter(this,pictureItems);
+            gridview.setAdapter(pictureAdapter);
         }
+
     }
 
     @Override
@@ -164,6 +151,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
     private void click_cameraTab(){
+        showCameraDialog();
         gridview.setVisibility(View.VISIBLE);
     }
     private void click_deleteTab(){
@@ -179,6 +167,16 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         scrollView_edit.setVisibility(View.GONE);
         scrollView_text.setVisibility(View.VISIBLE);
         gridview.setVisibility(View.INVISIBLE);
+
+        File imgfile = new File("/storage/emulated/0/DCIM/20200213_234735.jpg");
+        if(imgfile.exists()){
+            Bitmap bitmap = BitmapFactory.decodeFile(imgfile.getAbsolutePath());
+            ImageView imagetest = (ImageView)findViewById(R.id.imgtest);
+            imagetest.setImageBitmap(bitmap);
+            Log.d("jaejin","succ");
+        }else{
+            Log.d("jaejin","fail");
+        }
     }
     private void editMemo(){
         supportInvalidateOptionsMenu();
@@ -245,38 +243,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
     }
     private void goGallery(){
-
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
+        intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
+        startActivityForResult(Intent.createChooser(intent,"Select Picture"), PICK_FROM_GALLERY);
     }
     private void goImage(){
 
     }
 
-    public class PictureAdapter extends BaseAdapter {
-        ArrayList<PictureItem> items = new ArrayList<PictureItem>();
-        @Override
-        public int getCount() {
-            return items.size();
-        }
-
-        @Override
-        public PictureItem getItem(int position) {
-            return items.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            PictureViewer pictureViewer = new PictureViewer(getApplicationContext());
-            pictureViewer.setItem(items.get(position));
-            return pictureViewer;
-        }
-
-        public void addItem(PictureItem pictureItem){
-            items.add(pictureItem);
-        }
-    }
 }

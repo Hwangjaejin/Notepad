@@ -6,6 +6,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -13,6 +14,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -22,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -37,7 +41,11 @@ import com.example.notepad.model.PictureItem;
 import com.google.android.material.tabs.TabLayout;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,8 +127,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         edit_title.setOnClickListener(this);
         edit_detail.setOnClickListener(this);
 
-//        pictureAdapter = new PictureAdapter(MemoActivity.this);
-//        pictureAdapter.addItem(new PictureItem(ContextCompat.getDrawable(this,R.drawable.ic_photo_camera_black_24dp)));
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -134,6 +140,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             pictureItems.add(pictureItem);
             pictureAdapter = new PictureAdapter(this,pictureItems);
             gridview.setAdapter(pictureAdapter);
+
+            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    pictureItems.remove(position);
+                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                    gridview.setAdapter(pictureAdapter);
+                }
+            });
         }
 
     }

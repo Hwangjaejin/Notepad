@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import com.example.notepad.MemoActivity;
 import com.example.notepad.R;
 import com.example.notepad.model.PictureItem;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -48,18 +49,12 @@ public class PictureAdapter extends BaseAdapter {
         final PictureItem pictureItem = (PictureItem) this.getItem(position);
         ImageView imageView = (ImageView)view.findViewById(R.id.picture_view);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        Picasso.with(mContext).load(pictureItem.getUri()).into(imageView);
+        Picasso.with(mContext)
+                .load(pictureItem.getUri())
+                .error(R.drawable.ic_clear_red_24dp)
+                .into(imageView);
 
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //items.remove(position);
-            }
-        });
         return view;
     }
 
-    public void addItem(PictureItem pictureItem){
-        items.add(pictureItem);
-    }
 }

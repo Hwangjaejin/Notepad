@@ -19,10 +19,22 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 public class PictureAdapter extends BaseAdapter {
-    ArrayList<PictureItem> items;
+    public ArrayList<PictureItem> items;
     Context mContext;
+
+    public PictureAdapter() {
+    }
+
     public PictureAdapter(Context mContext, ArrayList<PictureItem> items) {
         this.mContext = mContext;
+        this.items = items;
+    }
+
+    public ArrayList<PictureItem> getItems() {
+        return items;
+    }
+
+    public void setItems(ArrayList<PictureItem> items) {
         this.items = items;
     }
 
@@ -49,6 +61,7 @@ public class PictureAdapter extends BaseAdapter {
         final PictureItem pictureItem = (PictureItem) this.getItem(position);
         ImageView imageView = (ImageView)view.findViewById(R.id.picture_view);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
         Picasso.with(mContext)
                 .load(pictureItem.getUri())
                 .error(R.drawable.ic_clear_red_24dp)

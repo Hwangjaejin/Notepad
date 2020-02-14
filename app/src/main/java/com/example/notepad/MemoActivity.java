@@ -3,7 +3,10 @@ package com.example.notepad;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import droidninja.filepicker.FilePickerBuilder;
+import droidninja.filepicker.FilePickerConst;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -57,6 +60,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private static final int CAMERA = 0;
     private static final int DELETE = 1;
 
+    private ArrayList<String> filePaths = new ArrayList<>();
     private TabLayout tabLayout;
     private GridView gridview;
     private EditText edit_title,edit_detail;
@@ -132,6 +136,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         super.onActivityResult(requestCode,resultCode,data);
 
+        if(requestCode == PICK_FROM_GALLERY){
+            if(resultCode == Activity.RESULT_OK && data != null){
+                filePaths = data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_MEDIA);
+                Log.d("jaejin",filePaths.size()+"");
+            }
+        }
+        /*
         if(requestCode == PICK_FROM_GALLERY && resultCode == RESULT_OK){
             Uri uri = data.getData();
 
@@ -150,7 +161,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
         }
-
+         */
     }
 
     @Override
@@ -183,15 +194,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         scrollView_text.setVisibility(View.VISIBLE);
         gridview.setVisibility(View.INVISIBLE);
 
-        File imgfile = new File("/storage/emulated/0/DCIM/20200213_234735.jpg");
-        if(imgfile.exists()){
-            Bitmap bitmap = BitmapFactory.decodeFile(imgfile.getAbsolutePath());
-            ImageView imagetest = (ImageView)findViewById(R.id.imgtest);
-            imagetest.setImageBitmap(bitmap);
-            Log.d("jaejin","succ");
-        }else{
-            Log.d("jaejin","fail");
-        }
     }
     private void editMemo(){
         supportInvalidateOptionsMenu();
@@ -223,6 +225,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         int id = item.getItemId();
 
         switch (id){
+            case android.R.id.home:
+                Log.d("jaejin",pictureItems.get(0).getUri()+"");
+                break;
             case R.id.done_menu:
                 saveMemo();
                 break;
@@ -258,13 +263,44 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
     }
     private void goGallery(){
+        /*
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
         intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
         startActivityForResult(Intent.createChooser(intent,"Select Picture"), PICK_FROM_GALLERY);
+         */
+        filePaths.clear();
+        FilePickerBuilder.getInstance().setMaxCount(5)
+                .setSelectedFiles(filePaths)
+                .setActivityTheme(R.style.AppTheme)
+                .pickPhoto(this);
     }
     private void goImage(){
+        final EditText editText = new EditText(this);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("이미지 붙여넣기");
+        builder.setMessage("이미지 URL 입력");
+        builder.setView(editText);
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Uri image_uri = Uri.parse(editText.getText().toString());
+                pictureItem = new PictureItem();
+                pictureItem.setUri(image_uri);
+
+                pictureItems.add(pictureItem);
+                pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                gridview.setAdapter(pictureAdapter);
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.show();
     }
 
 }

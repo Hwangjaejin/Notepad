@@ -7,22 +7,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 public class PictureItem {
-//    private int imageView;
-    Uri uri;
-
-    /*
-    public PictureItem(int imageView) {
-        this.imageView = imageView;
-    }
-
-    public int getImageView() {
-        return imageView;
-    }
-
-    public void setImageView(int imageView) {
-        this.imageView = imageView;
-    }
-     */
+    private Uri uri;
 
     public PictureItem() {
     }

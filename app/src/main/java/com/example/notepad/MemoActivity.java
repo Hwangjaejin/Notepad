@@ -1,66 +1,55 @@
 package com.example.notepad;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import droidninja.filepicker.FilePickerBuilder;
-import droidninja.filepicker.FilePickerConst;
-
-import android.app.Activity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
 import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.URLUtil;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.model.PictureItem;
 import com.google.android.material.tabs.TabLayout;
+import com.sangcomz.fishbun.FishBun;
+import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
+import com.sangcomz.fishbun.define.Define;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private static final int PICK_FROM_CAMERA = 0;
-    private static final int PICK_FROM_GALLERY = 1;
-    private static final int PICK_FROM_IMAGE = 2;
+    private static final int PICK_FROM_GALLERY = 0;
+    private static final int PICK_FROM_IMAGE = 1;
     private static final int CAMERA = 0;
     private static final int DELETE = 1;
+    private final int PERMISSIONS_REQUEST_CAMERA=1001;
 
-    private ArrayList<String> filePaths = new ArrayList<>();
     private TabLayout tabLayout;
     private GridView gridview;
     private EditText edit_title,edit_detail;
@@ -71,12 +60,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private PictureAdapter pictureAdapter;
     private PictureItem pictureItem;
     private ArrayList<PictureItem> pictureItems = new ArrayList<>();
-
+    private ArrayList<Uri> imagePaths = new ArrayList<>();
+    private InputMethodManager imm;
+    private int delete_img_pos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo);
 
+        imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imageView = findViewById(R.id.imgtest);
 
         scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
@@ -108,12 +100,10 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                 }
             }
-
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
 
             }
-
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 switch (tab.getPosition()){
@@ -136,32 +126,46 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         super.onActivityResult(requestCode,resultCode,data);
 
-        if(requestCode == PICK_FROM_GALLERY){
-            if(resultCode == Activity.RESULT_OK && data != null){
-                filePaths = data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_MEDIA);
-                Log.d("jaejin",filePaths.size()+"");
-            }
-        }
-        /*
-        if(requestCode == PICK_FROM_GALLERY && resultCode == RESULT_OK){
-            Uri uri = data.getData();
+        switch (requestCode){
+            case Define.ALBUM_REQUEST_CODE:
+                if(resultCode == RESULT_OK){
 
-            pictureItem = new PictureItem();
-            pictureItem.setUri(uri);
-            pictureItems.add(pictureItem);
-            pictureAdapter = new PictureAdapter(this,pictureItems);
-            gridview.setAdapter(pictureAdapter);
+                    imagePaths = data.getParcelableArrayListExtra(Define.INTENT_PATH);
+                    for(Uri uri:imagePaths){
+                        pictureItem = new PictureItem();
+                        pictureItem.setUri(uri);
+                        pictureItems.add(pictureItem);
+                        pictureAdapter = new PictureAdapter(this,pictureItems);
+                        gridview.setAdapter(pictureAdapter);
 
-            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    pictureItems.remove(position);
-                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
-                    gridview.setAdapter(pictureAdapter);
+                        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+                                builder.setTitle("안내");
+                                builder.setMessage("첨부된 사진을 삭제하시겠습니까?");
+                                delete_img_pos = position;
+                                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        pictureItems.remove(delete_img_pos);
+                                        pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                                        gridview.setAdapter(pictureAdapter);
+                                    }
+                                });
+                                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {}
+                                });
+                                builder.show();
+
+                            }
+                        });
+                    }
                 }
-            });
+                break;
         }
-         */
+
     }
 
     @Override
@@ -176,7 +180,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
-    private void click_cameraTab(){
+    private void click_cameraTab() {
+        imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
+        imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
         showCameraDialog();
         gridview.setVisibility(View.VISIBLE);
     }
@@ -226,7 +232,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (id){
             case android.R.id.home:
-                Log.d("jaejin",pictureItems.get(0).getUri()+"");
+                Log.d("jaejin",pictureItems.size()+"");
                 break;
             case R.id.done_menu:
                 saveMemo();
@@ -244,9 +250,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(DialogInterface dialog, int pos) {
                 switch (pos){
-                    case PICK_FROM_CAMERA:
-                        goCamera();
-                        break;
                     case PICK_FROM_GALLERY:
                         goGallery();
                         break;
@@ -259,21 +262,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
-    private void goCamera(){
 
-    }
     private void goGallery(){
-        /*
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
-        intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
-        startActivityForResult(Intent.createChooser(intent,"Select Picture"), PICK_FROM_GALLERY);
-         */
-        filePaths.clear();
-        FilePickerBuilder.getInstance().setMaxCount(5)
-                .setSelectedFiles(filePaths)
-                .setActivityTheme(R.style.AppTheme)
-                .pickPhoto(this);
+        FishBun.with(MemoActivity.this)
+                .setImageAdapter(new GlideAdapter())
+                .setCamera(true)
+                .setActionBarColor(Color.parseColor("#795548"), Color.parseColor("#5D4037"), false)
+                .startAlbum();
     }
     private void goImage(){
         final EditText editText = new EditText(this);

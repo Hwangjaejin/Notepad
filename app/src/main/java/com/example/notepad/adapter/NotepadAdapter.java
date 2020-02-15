@@ -32,9 +32,13 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
     public void onBindViewHolder(NotepadAdapter.ViewHolder holder, int position) {
         NotepadItem item = items.get(position);
 
+        /*
         Glide.with(holder.itemView.getContext())
-                .load(item.getThumnail_src())
+                .load(item.getImg_paths())
                 .into(holder.img);
+
+
+         */
         holder.title.setText(item.getTitle_text());
         holder.detail.setText(item.getDetail_text());
     }

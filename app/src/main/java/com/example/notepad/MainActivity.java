@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setAdapter(adapter);
 
         //아이템 로드
-        adapter.setItems(new SampleData().getItems());
+        //adapter.setItems(new SampleData().getItems());
     }
 
     @Override

@@ -43,18 +43,20 @@
                     android:id="@+id/memo_title_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
                     android:text="제목"
-                    android:textSize="30dp">
+                    android:textSize="20dp">
                 </TextView>
 
                 <TextView
                     android:id="@+id/memo_detail_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginLeft="10dp"
                     android:text="내용"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
                 <ImageView
@@ -89,10 +91,12 @@
                     android:id="@+id/memo_title_edit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
                     android:background="@null"
                     android:hint="제목입력"
-                    android:textSize="30dp">
+                    android:textSize="20dp">
                 </EditText>
 
                 <EditText
@@ -102,10 +106,10 @@
                     android:layout_below="@+id/memo_title_edit"
                     android:layout_above="@id/gridview"
                     android:gravity="top"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginLeft="10dp"
                     android:background="@null"
                     android:hint="내용입력"
-                    android:textSize="20dp"
+                    android:textSize="15dp"
                     android:layout_weight="1">
                 </EditText>
 
@@ -132,7 +136,5 @@
         android:layout_alignParentBottom="true"
         android:background="@drawable/border_layout"
         android:minHeight="?attr/actionBarSize"
-        app:tabIndicatorColor="@color/colorBeige"
-        app:tabSelectedTextColor="@color/colorOrange"
-        app:tabTextColor="#000000" />
+        app:tabIndicatorColor="#ffffff" />
 </RelativeLayout>

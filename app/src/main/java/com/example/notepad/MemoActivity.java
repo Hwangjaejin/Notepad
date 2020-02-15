@@ -4,43 +4,37 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import android.Manifest;
-import android.content.ClipData;
+import io.realm.Realm;
+import io.realm.RealmResults;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Toast;
 
 import com.example.notepad.adapter.PictureAdapter;
+import com.example.notepad.model.NotepadItem;
 import com.example.notepad.model.PictureItem;
 import com.google.android.material.tabs.TabLayout;
 import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -48,8 +42,8 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private static final int PICK_FROM_IMAGE = 1;
     private static final int CAMERA = 0;
     private static final int DELETE = 1;
-    private final int PERMISSIONS_REQUEST_CAMERA=1001;
 
+    private Realm realm;
     private TabLayout tabLayout;
     private GridView gridview;
     private EditText edit_title,edit_detail;
@@ -58,15 +52,16 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private Toolbar toolbar;
     private boolean menu_flag = false;
     private PictureAdapter pictureAdapter;
-    private PictureItem pictureItem;
-    private ArrayList<PictureItem> pictureItems = new ArrayList<>();
-    private ArrayList<Uri> imagePaths = new ArrayList<>();
+    private ArrayList<Uri> pictureItems = new ArrayList<>(); // 현재 저장되어 있는 모든 이미지 주소
+    private ArrayList<Uri> imagePaths = new ArrayList<>(); // 새로 가져온 이미지 주소
     private InputMethodManager imm;
     private int delete_img_pos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo);
+
+        realm = Realm.getDefaultInstance();
 
         imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imageView = findViewById(R.id.imgtest);
@@ -88,6 +83,8 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_photo_camera_orange_24dp));
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_delete_orange_24dp));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        tabLayout.getTabAt(0).getIcon().setColorFilter(getResources().getColor(R.color.colorOrange), PorterDuff.Mode.SRC_IN);
+        tabLayout.getTabAt(1).getIcon().setColorFilter(getResources().getColor(R.color.colorOrange), PorterDuff.Mode.SRC_IN);
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -131,43 +128,43 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 if(resultCode == RESULT_OK){
 
                     imagePaths = data.getParcelableArrayListExtra(Define.INTENT_PATH);
-                    for(Uri uri:imagePaths){
-                        pictureItem = new PictureItem();
-                        pictureItem.setUri(uri);
-                        pictureItems.add(pictureItem);
-                        pictureAdapter = new PictureAdapter(this,pictureItems);
-                        gridview.setAdapter(pictureAdapter);
+                    pictureItems.addAll(imagePaths);
+                    pictureAdapter = new PictureAdapter(this,pictureItems);
+                    gridview.setAdapter(pictureAdapter);
 
-                        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
-                                builder.setTitle("안내");
-                                builder.setMessage("첨부된 사진을 삭제하시겠습니까?");
-                                delete_img_pos = position;
-                                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        pictureItems.remove(delete_img_pos);
-                                        pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
-                                        gridview.setAdapter(pictureAdapter);
-                                    }
-                                });
-                                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {}
-                                });
-                                builder.show();
+                    gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+                            builder.setTitle("안내");
+                            builder.setMessage("첨부된 사진을 삭제하시겠습니까?");
+                            delete_img_pos = position;
+                            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    pictureItems.remove(delete_img_pos);
+                                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                                    gridview.setAdapter(pictureAdapter);
+                                }
+                            });
+                            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {}
+                            });
+                            builder.show();
 
-                            }
-                        });
-                    }
+                        }
+                    });
                 }
                 break;
         }
 
     }
-
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        realm.close();
+    }
     @Override
     public void onClick(View v) {
         int id = v.getId();
@@ -187,19 +184,84 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         gridview.setVisibility(View.VISIBLE);
     }
     private void click_deleteTab(){
-        gridview.setVisibility(View.GONE);
+        AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+        builder.setTitle("안내");
+        builder.setMessage("사진을 전부 삭제하시겠습니까?");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                pictureItems.clear();
+                pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                gridview.setAdapter(pictureAdapter);
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {}
+        });
+        builder.show();
     }
     private void click_layout(){
         gridview.setVisibility(View.GONE);
     }
     private void saveMemo(){
-        supportInvalidateOptionsMenu();
-        scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
-        scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
-        scrollView_edit.setVisibility(View.GONE);
-        scrollView_text.setVisibility(View.VISIBLE);
-        gridview.setVisibility(View.INVISIBLE);
+        final String title = edit_title.getText().toString().trim();
+        final String detail = edit_detail.getText().toString().trim();
 
+        if(title.getBytes().length <= 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+            builder.setTitle("안내");
+            builder.setMessage("제목을 입력해주세요.");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.show();
+        }else if(detail.getBytes().length <= 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+            builder.setTitle("안내");
+            builder.setMessage("내용을 입력해주세요.");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.show();
+        }else{
+            realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    Number currentId = realm.where(NotepadItem.class).max("id");
+                    Number nextId;
+                    if(currentId == null) nextId = 0;
+                    else nextId = currentId.intValue() + 1;
+
+                    NotepadItem notepadItem = realm.createObject(NotepadItem.class, nextId.intValue());
+                    notepadItem.setTitle_text(title);
+                    notepadItem.setDetail_text(detail);
+                }
+            }, new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    Log.d("jaejin","Realm Success");
+                }
+            }, new Realm.Transaction.OnError(){
+                @Override
+                public void onError(Throwable error) {
+                    Log.d("jaejin","Realm Failed");
+                }
+            });
+
+            supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
+            scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
+            scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
+            scrollView_edit.setVisibility(View.GONE);
+            scrollView_text.setVisibility(View.VISIBLE);
+            gridview.setVisibility(View.INVISIBLE);
+            edit_title.setText("");
+            edit_detail.setText("");
+        }
     }
     private void editMemo(){
         supportInvalidateOptionsMenu();
@@ -232,7 +294,35 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (id){
             case android.R.id.home:
-                Log.d("jaejin",pictureItems.size()+"");
+                realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        RealmResults<NotepadItem> notepadItems;
+                        notepadItems = realm.where(NotepadItem.class).findAll();
+                        Log.d("jaejin",notepadItems +"");
+
+                        /* id가 notepadItems.get(1).getNotepadId()인 모든 객체 update방법
+                        NotepadItem notepadItem;
+                        notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
+                        notepadItem.setTitle_text("jaejin");
+                        */
+
+                        /*  id가 notepadItems.get(1).getNotepadId()인 모든 객체 삭제방법
+                        RealmResults<NotepadItem> notepadItems;
+                        notepadItems = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findAll();
+                        notepadItems.deleteAllFromRealm();
+                        Log.d("jaejin",notepadItems +"");
+                        */
+
+                        /*  id가 notepadItems.get(1).getNotepadId()인 객체 중 첫 번째 객체만 삭제방법
+
+                        NotepadItem notepadItem;
+                        notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
+                        notepadItem.deleteFromRealm();
+                        Log.d("jaejin",notepadItems +"");
+                         */
+                    }
+                });
                 break;
             case R.id.done_menu:
                 saveMemo();
@@ -281,10 +371,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Uri image_uri = Uri.parse(editText.getText().toString());
-                pictureItem = new PictureItem();
-                pictureItem.setUri(image_uri);
-
-                pictureItems.add(pictureItem);
+                pictureItems.add(image_uri);
                 pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
                 gridview.setAdapter(pictureAdapter);
             }
@@ -297,5 +384,4 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
-
 }

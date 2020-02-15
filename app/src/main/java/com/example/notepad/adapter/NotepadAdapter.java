@@ -1,5 +1,6 @@
 package com.example.notepad.adapter;
 
+import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,13 +13,20 @@ import com.example.notepad.R;
 import com.example.notepad.model.NotepadItem;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHolder> {
 
-    private ArrayList<NotepadItem> items = new ArrayList<>();
+    private ArrayList<NotepadItem> items;
+    private Context mContext;
+
+    public NotepadAdapter(ArrayList<NotepadItem> items, Context mContext) {
+        this.items = items;
+        this.mContext = mContext;
+    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -46,10 +54,6 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
     @Override
     public int getItemCount() {
         return items.size();
-    }
-
-    public void setItems(ArrayList<NotepadItem> items) {
-        this.items = items;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

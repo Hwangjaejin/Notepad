@@ -1,10 +1,5 @@
 package com.example.notepad.model;
 
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.util.Log;
-import android.widget.ImageView;
 
 import io.realm.RealmObject;
 

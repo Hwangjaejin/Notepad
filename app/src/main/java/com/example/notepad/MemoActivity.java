@@ -315,7 +315,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         */
 
                         /*  id가 notepadItems.get(1).getNotepadId()인 객체 중 첫 번째 객체만 삭제방법
-
                         NotepadItem notepadItem;
                         notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
                         notepadItem.deleteFromRealm();

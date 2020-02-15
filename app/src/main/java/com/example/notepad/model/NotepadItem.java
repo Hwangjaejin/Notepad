@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class NotepadItem extends RealmObject{
@@ -13,6 +14,8 @@ public class NotepadItem extends RealmObject{
     private int id;
     private String title_text;
     private String detail_text;
+    @Ignore
+    private ArrayList<String> imagePaths;
 
     public NotepadItem(){}
 
@@ -25,6 +28,13 @@ public class NotepadItem extends RealmObject{
         this.id = notepadId;
         this.title_text = title_text;
         this.detail_text = detail_text;
+    }
+
+    public NotepadItem(int id, String title_text, String detail_text, ArrayList<String> imagePaths) {
+        this.id = id;
+        this.title_text = title_text;
+        this.detail_text = detail_text;
+        this.imagePaths = imagePaths;
     }
 
     public int getNotepadId() {
@@ -51,4 +61,11 @@ public class NotepadItem extends RealmObject{
         this.detail_text = detail_text;
     }
 
+    public ArrayList<String> getImagePaths() {
+        return imagePaths;
+    }
+
+    public void setImagePaths(ArrayList<String> imagePaths) {
+        this.imagePaths = imagePaths;
+    }
 }

@@ -1,6 +1,5 @@
 package com.example.notepad;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -26,15 +25,14 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 
 import com.example.notepad.adapter.PictureAdapter;
-import com.example.notepad.model.NotepadItem;
-import com.example.notepad.model.PictureItem;
+import com.example.notepad.data.NotepadItem;
+import com.example.notepad.data.PictureItem;
 import com.google.android.material.tabs.TabLayout;
 import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -48,7 +46,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private GridView gridview;
     private EditText edit_title,edit_detail;
     private ScrollView scrollView_edit, scrollView_text;
-    private ImageView imageView;
     private Toolbar toolbar;
     private boolean menu_flag = false;
     private PictureAdapter pictureAdapter;
@@ -56,20 +53,30 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<Uri> imagePaths = new ArrayList<>(); // 새로 가져온 이미지 주소
     private InputMethodManager imm;
     private int delete_img_pos;
+    private boolean isEditMode;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo);
 
+        Intent intent = getIntent();
+        if(intent.getExtras().getInt("id") == -1) isEditMode = true;
+        else isEditMode = false;
+
         realm = Realm.getDefaultInstance();
 
         imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        imageView = findViewById(R.id.imgtest);
 
         scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
         scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
-        scrollView_edit.setVisibility(View.VISIBLE);
-        scrollView_text.setVisibility(View.GONE);
+
+        if(isEditMode){
+            scrollView_edit.setVisibility(View.VISIBLE);
+            scrollView_text.setVisibility(View.GONE);
+        }else{
+            scrollView_edit.setVisibility(View.GONE);
+            scrollView_text.setVisibility(View.VISIBLE);
+        }
 
         gridview = (GridView)findViewById(R.id.gridview);
 
@@ -166,6 +173,12 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         realm.close();
     }
     @Override
+    public void onBackPressed(){
+        Intent intent = new Intent(this,MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+    @Override
     public void onClick(View v) {
         int id = v.getId();
         switch (id) {
@@ -232,8 +245,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    Number currentId = realm.where(NotepadItem.class).max("id");
-                    Number nextId;
+                    Number currentId, nextId;
+                    currentId = realm.where(NotepadItem.class).max("id");
+
                     if(currentId == null) nextId = 0;
                     else nextId = currentId.intValue() + 1;
 
@@ -253,6 +267,18 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
 
+            for(final Uri img_path : pictureItems){
+                realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        Number currentId = realm.where(NotepadItem.class).max("id");
+
+                        PictureItem pictureItem = realm.createObject(PictureItem.class);
+                        pictureItem.setId(currentId.intValue());
+                        pictureItem.setUri(img_path.toString());
+                    }
+                });
+            }
             supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
             scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
             scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
@@ -299,9 +325,11 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                     public void execute(Realm realm) {
                         RealmResults<NotepadItem> notepadItems;
                         notepadItems = realm.where(NotepadItem.class).findAll();
+                        RealmResults<PictureItem> pictureItems;
+                        pictureItems = realm.where(PictureItem.class).findAll();
                         Log.d("jaejin",notepadItems +"");
-
-                        /* id가 notepadItems.get(1).getNotepadId()인 모든 객체 update방법
+                        Log.d("jaejin",pictureItems +"");
+                        /* id가 notepadItems.get(1).getNotepadId()인 객체 줓 첫 번째 객체 update 방법
                         NotepadItem notepadItem;
                         notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
                         notepadItem.setTitle_text("jaejin");

@@ -1,4 +1,4 @@
-package com.example.notepad.model;
+package com.example.notepad.data;
 
 
 import io.realm.RealmObject;

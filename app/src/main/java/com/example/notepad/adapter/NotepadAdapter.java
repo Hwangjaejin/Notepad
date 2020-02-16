@@ -1,6 +1,7 @@
 package com.example.notepad.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,11 +10,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.notepad.MemoActivity;
 import com.example.notepad.R;
-import com.example.notepad.model.NotepadItem;
+import com.example.notepad.data.NotepadItem;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,27 +36,6 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
 
         return viewHolder;
     }
-
-    @Override
-    public void onBindViewHolder(NotepadAdapter.ViewHolder holder, int position) {
-        NotepadItem item = items.get(position);
-
-        /*
-        Glide.with(holder.itemView.getContext())
-                .load(item.getImg_paths())
-                .into(holder.img);
-
-
-         */
-        holder.title.setText(item.getTitle_text());
-        holder.detail.setText(item.getDetail_text());
-    }
-
-    @Override
-    public int getItemCount() {
-        return items.size();
-    }
-
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView img;
@@ -67,6 +47,32 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
             img = itemView.findViewById(R.id.img_src);
             title = itemView.findViewById(R.id.text_title);
             detail = itemView.findViewById(R.id.text_detail);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    Intent memoActivity = new Intent(v.getContext(), MemoActivity.class);
+                    memoActivity.putExtra("id",items.get(position).getNotepadId());
+                    v.getContext().startActivity(memoActivity);
+                }
+            });
         }
+    }
+    @Override
+    public void onBindViewHolder(NotepadAdapter.ViewHolder holder, int position) {
+        NotepadItem item = items.get(position);
+
+        Glide.with(holder.itemView.getContext())
+                .load(item.getImagePath())
+                .into(holder.img);
+
+        holder.title.setText(item.getTitle_text());
+        holder.detail.setText(item.getDetail_text());
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
     }
 }

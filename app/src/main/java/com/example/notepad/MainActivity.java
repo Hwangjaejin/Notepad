@@ -9,17 +9,14 @@ import io.realm.RealmResults;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
 import com.example.notepad.adapter.NotepadAdapter;
-import com.example.notepad.data.SampleData;
-import com.example.notepad.model.NotepadItem;
+import com.example.notepad.data.NotepadItem;
+import com.example.notepad.data.PictureItem;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -54,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy(){
         super.onDestroy();
+        finish();
         realm.close();
     }
 
@@ -68,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     public void goMemoActivity(){
         Intent memoActivity = new Intent(this, MemoActivity.class);
+        memoActivity.putExtra("id",-1);
         startActivity(memoActivity);
     }
 
@@ -75,14 +74,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RealmResults<NotepadItem> notepadItems;
         notepadItems = realm.where(NotepadItem.class).findAll();
 
-        for(int i = 0 ; i < notepadItems.size(); i++){
+        for(int i = notepadItems.size() - 1 ; i >= 0; i--){
             int id = notepadItems.get(i).getNotepadId();
             String title = notepadItems.get(i).getTitle_text();
             String detail = notepadItems.get(i).getDetail_text();
+            String img_path;
+            long img_count = realm.where(PictureItem.class).equalTo("id",id).count();
+            if(img_count > 0){
+                PictureItem pictureItem = realm.where(PictureItem.class).equalTo("id",id).findFirst();
+                img_path = pictureItem.getUri();
+            }else{
+                img_path = null;
+            }
+
             NotepadItem item = new NotepadItem(
                     id,
                     title,
-                    detail
+                    detail,
+                    img_path
             );
             items.add(item);
         }

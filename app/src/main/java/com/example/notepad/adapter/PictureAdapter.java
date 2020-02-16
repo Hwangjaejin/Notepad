@@ -9,7 +9,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
 import com.example.notepad.R;
-import com.example.notepad.model.PictureItem;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;

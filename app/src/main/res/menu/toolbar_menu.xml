@@ -9,9 +9,15 @@
         android:orderInCategory="0"
         app:showAsAction="always" />
     <item
+        android:id="@+id/delete_menu"
+        android:icon="@drawable/ic_delete_orange_24dp"
+        android:title="delete"
+        android:orderInCategory="0"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/edit_menu"
         android:icon="@drawable/ic_mode_edit_orange_24dp"
         android:title="edit"
-        android:orderInCategory="0"
+        android:orderInCategory="1"
         app:showAsAction="always" />
 </menu>

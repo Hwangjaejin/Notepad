@@ -23,6 +23,8 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.data.NotepadItem;
@@ -33,6 +35,7 @@ import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -44,7 +47,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private Realm realm;
     private TabLayout tabLayout;
     private GridView gridview;
+    private ImageView imageView;
     private EditText edit_title,edit_detail;
+    private TextView text_title,text_detail;
     private ScrollView scrollView_edit, scrollView_text;
     private Toolbar toolbar;
     private boolean menu_flag = false;
@@ -54,31 +59,37 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private InputMethodManager imm;
     private int delete_img_pos;
     private boolean isEditMode;
+    private int notepadId;
+    private boolean isImgDup = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo);
 
         Intent intent = getIntent();
-        if(intent.getExtras().getInt("id") == -1) isEditMode = true;
+        notepadId = intent.getExtras().getInt("id");
+        if(notepadId == -1) isEditMode = true;
         else isEditMode = false;
 
         realm = Realm.getDefaultInstance();
 
         imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 
+        ImageView iv = new ImageView(this);
         scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
         scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
-
-        if(isEditMode){
-            scrollView_edit.setVisibility(View.VISIBLE);
-            scrollView_text.setVisibility(View.GONE);
-        }else{
-            scrollView_edit.setVisibility(View.GONE);
-            scrollView_text.setVisibility(View.VISIBLE);
-        }
+        edit_title = (EditText)findViewById(R.id.memo_title_edit);
+        edit_detail = (EditText)findViewById(R.id.memo_detail_edit);
+        edit_title.setOnClickListener(this);
+        edit_detail.setOnClickListener(this);
+        text_title = (TextView)findViewById(R.id.memo_title_text);
+        text_detail = (TextView)findViewById(R.id.memo_detail_text);
 
         gridview = (GridView)findViewById(R.id.gridview);
+
+        imageView = (ImageView)findViewById(R.id.imgtest);
+       // PictureItem pictureItem = realm.where(PictureItem.class).equalTo("id",notepadId).findFirst();
+       // imageView.setImageURI(Uri.parse(pictureItem.getUri()));
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -120,11 +131,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-        edit_title = (EditText)findViewById(R.id.memo_title_edit);
-        edit_detail = (EditText)findViewById(R.id.memo_detail_edit);
-        edit_title.setOnClickListener(this);
-        edit_detail.setOnClickListener(this);
-
+        initMemo();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -135,7 +142,14 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 if(resultCode == RESULT_OK){
 
                     imagePaths = data.getParcelableArrayListExtra(Define.INTENT_PATH);
-                    pictureItems.addAll(imagePaths);
+                    for(Uri img_uri : imagePaths){
+                        if(pictureItems.contains(img_uri)) isImgDup = true;
+                        else pictureItems.add(img_uri);
+                    }
+                    if(isImgDup){
+                        Toast toast = Toast.makeText(this.getApplicationContext(),"중복사진을 제외하고 추가하였습니다.", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
                     pictureAdapter = new PictureAdapter(this,pictureItems);
                     gridview.setAdapter(pictureAdapter);
 
@@ -167,6 +181,14 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
+    /*
+    @Override
+    public void onPause(){
+        super.onPause();
+        finish();
+    }
+
+     */
     @Override
     protected void onDestroy(){
         super.onDestroy();
@@ -183,13 +205,38 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         int id = v.getId();
         switch (id) {
             case R.id.memo_title_edit:
-                click_layout();
+                click_title_edit();
                 break;
             case R.id.memo_detail_edit:
-                click_layout();
+                click_detail_edit();
                 break;
         }
     }
+    private void initMemo(){
+        if(isEditMode){
+            scrollView_edit.setVisibility(View.VISIBLE);
+            scrollView_text.setVisibility(View.GONE);
+            menu_flag = false;
+        }else{
+            scrollView_edit.setVisibility(View.GONE);
+            scrollView_text.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.INVISIBLE);
+            NotepadItem notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadId).findFirst();
+            text_title.setText(notepadItem.getTitle_text());
+            text_detail.setText(notepadItem.getDetail_text());
+            menu_flag = true;
+            RealmResults<PictureItem> pictureitems;
+            pictureitems = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+            if(pictureitems.size() > 0){
+                for(int i = 0; i < pictureitems.size(); i++){
+                    pictureItems.add(Uri.parse(pictureitems.get(i).getUri()));
+                }
+                pictureAdapter = new PictureAdapter(this,pictureItems);
+                gridview.setAdapter(pictureAdapter);
+            }
+        }
+    }
+
     private void click_cameraTab() {
         imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
         imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
@@ -214,8 +261,27 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
-    private void click_layout(){
-        gridview.setVisibility(View.GONE);
+    private void click_title_edit(){
+        edit_title.post(new Runnable() {
+            @Override
+            public void run() {
+                edit_title.setFocusable(true);
+                edit_title.requestFocus();
+                imm.showSoftInput(edit_title,0);
+                gridview.setVisibility(View.GONE);
+            }
+        });
+    }
+    private void click_detail_edit(){
+        edit_detail.post(new Runnable() {
+            @Override
+            public void run() {
+                edit_detail.setFocusable(true);
+                edit_detail.requestFocus();
+                imm.showSoftInput(edit_detail,0);
+                gridview.setVisibility(View.GONE);
+            }
+        });
     }
     private void saveMemo(){
         final String title = edit_title.getText().toString().trim();
@@ -245,15 +311,21 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    Number currentId, nextId;
-                    currentId = realm.where(NotepadItem.class).max("id");
+                    if(notepadId == -1){
+                        Number currentId, nextId;
+                        currentId = realm.where(NotepadItem.class).max("id");
 
-                    if(currentId == null) nextId = 0;
-                    else nextId = currentId.intValue() + 1;
+                        if(currentId == null) nextId = 0;
+                        else nextId = currentId.intValue() + 1;
 
-                    NotepadItem notepadItem = realm.createObject(NotepadItem.class, nextId.intValue());
-                    notepadItem.setTitle_text(title);
-                    notepadItem.setDetail_text(detail);
+                        NotepadItem notepadItem = realm.createObject(NotepadItem.class, nextId.intValue());
+                        notepadItem.setTitle_text(title);
+                        notepadItem.setDetail_text(detail);
+                    }else{
+                        NotepadItem notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadId).findFirst();
+                        notepadItem.setTitle_text(title);
+                        notepadItem.setDetail_text(detail);
+                    }
                 }
             }, new Realm.Transaction.OnSuccess() {
                 @Override
@@ -266,36 +338,93 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                     Log.d("jaejin","Realm Failed");
                 }
             });
-
             for(final Uri img_path : pictureItems){
                 realm.executeTransactionAsync(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        Number currentId = realm.where(NotepadItem.class).max("id");
+                        Number currentId;
+                        if(notepadId == -1) {
+                            currentId = realm.where(NotepadItem.class).max("id"); // 바로 위에서 id값을 갱신하여서 max값으로 그냥 찾아도 된다.
+                            PictureItem pictureItem = realm.createObject(PictureItem.class);
+                            pictureItem.setId(currentId.intValue());
+                            pictureItem.setUri(img_path.toString());
+                        }
+                        else {
+                            currentId = notepadId;
+                            RealmResults<PictureItem> pictureitem;
+                            pictureitem = realm.where(PictureItem.class)
+                                    .equalTo("id",notepadId)
+                                    .and()
+                                    .equalTo("uri",img_path.toString())
+                                    .findAll(); // id가 notepadid이고 uri가 img_path인 picture들을 모두 검색
 
-                        PictureItem pictureItem = realm.createObject(PictureItem.class);
-                        pictureItem.setId(currentId.intValue());
-                        pictureItem.setUri(img_path.toString());
+                            if(pictureitem.size() < 1){
+                                PictureItem pictureItem = realm.createObject(PictureItem.class);
+                                pictureItem.setId(currentId.intValue());
+                                pictureItem.setUri(img_path.toString());
+                            }
+                        }
                     }
                 });
             }
             supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
-            scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
-            scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
             scrollView_edit.setVisibility(View.GONE);
             scrollView_text.setVisibility(View.VISIBLE);
-            gridview.setVisibility(View.INVISIBLE);
-            edit_title.setText("");
-            edit_detail.setText("");
+            text_title.setText(edit_title.getText().toString());
+            text_detail.setText(edit_detail.getText().toString());
+            imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
+            imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
+            tabLayout.setVisibility(View.INVISIBLE);
+            gridview.setVisibility(View.GONE);
+            isEditMode = false;
         }
     }
+    private void deleteMemo(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+        builder.setTitle("안내");
+        builder.setMessage("메모를 삭제하시겠습니까?");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                realm.executeTransactionAsync(new Realm.Transaction(){
+                    @Override
+                    public void execute(Realm realm) {
+                        RealmResults<NotepadItem> notepadItems;
+                        RealmResults<PictureItem> pictureItems;
+                        notepadItems = realm.where(NotepadItem.class).equalTo("id",notepadId).findAll();
+                        pictureItems = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+                        notepadItems.deleteAllFromRealm();
+                        if(pictureItems.size() > 0) pictureItems.deleteAllFromRealm();
+                    }
+                });
+                Intent intent = new Intent(MemoActivity.this,MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {}
+        });
+        builder.show();
+    }
     private void editMemo(){
+        isEditMode = true;
+        edit_title.post(new Runnable() {
+            @Override
+            public void run() {
+                edit_title.setFocusable(true);
+                edit_title.requestFocus();
+                imm.showSoftInput(edit_title,0);
+                gridview.setVisibility(View.GONE);
+            }
+        });
+        edit_title.setText(text_title.getText().toString());
+        edit_detail.setText(text_detail.getText().toString());
         supportInvalidateOptionsMenu();
-        scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
-        scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
+        tabLayout.setVisibility(View.VISIBLE);
         scrollView_edit.setVisibility(View.VISIBLE);
         scrollView_text.setVisibility(View.GONE);
-        gridview.setVisibility(View.VISIBLE);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -307,9 +436,11 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         if(menu_flag){
             menu.getItem(0).setVisible(false);
             menu.getItem(1).setVisible(true);
+            menu.getItem(2).setVisible(true);
         }else{
             menu.getItem(0).setVisible(true);
             menu.getItem(1).setVisible(false);
+            menu.getItem(2).setVisible(false);
         }
         menu_flag = !menu_flag;
         return super.onPrepareOptionsMenu(menu);
@@ -353,6 +484,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.done_menu:
                 saveMemo();
+                break;
+            case R.id.delete_menu:
+                deleteMemo();
                 break;
             case R.id.edit_menu:
                 editMemo();

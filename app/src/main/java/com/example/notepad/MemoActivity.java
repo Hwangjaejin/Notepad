@@ -319,6 +319,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         else nextId = currentId.intValue() + 1;
 
                         NotepadItem notepadItem = realm.createObject(NotepadItem.class, nextId.intValue());
+                        notepadId = nextId.intValue();
                         notepadItem.setTitle_text(title);
                         notepadItem.setDetail_text(detail);
                     }else{
@@ -458,27 +459,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         notepadItems = realm.where(NotepadItem.class).findAll();
                         RealmResults<PictureItem> pictureItems;
                         pictureItems = realm.where(PictureItem.class).findAll();
-                        Log.d("jaejin",notepadItems +"");
-                        Log.d("jaejin",pictureItems +"");
-                        /* id가 notepadItems.get(1).getNotepadId()인 객체 줓 첫 번째 객체 update 방법
-                        NotepadItem notepadItem;
-                        notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
-                        notepadItem.setTitle_text("jaejin");
-                        */
-
-                        /*  id가 notepadItems.get(1).getNotepadId()인 모든 객체 삭제방법
-                        RealmResults<NotepadItem> notepadItems;
-                        notepadItems = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findAll();
-                        notepadItems.deleteAllFromRealm();
-                        Log.d("jaejin",notepadItems +"");
-                        */
-
-                        /*  id가 notepadItems.get(1).getNotepadId()인 객체 중 첫 번째 객체만 삭제방법
-                        NotepadItem notepadItem;
-                        notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadItems.get(1).getNotepadId()).findFirst();
-                        notepadItem.deleteFromRealm();
-                        Log.d("jaejin",notepadItems +"");
-                         */
                     }
                 });
                 break;

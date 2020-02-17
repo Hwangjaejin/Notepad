@@ -17,11 +17,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +46,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private static final int NO_ID = -1;
     private Realm realm;
     private TabLayout tabLayout;
+    private LinearLayout text_scroll_layout;
     private GridView gridview;
     private ImageView imageView;
     private EditText edit_title,edit_detail;
@@ -73,7 +76,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
         imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        ImageView iv = new ImageView(this);
+        text_scroll_layout = (LinearLayout)findViewById(R.id.text_scroll_layout);
         scrollView_edit = (ScrollView)findViewById(R.id.scrollView_edit);
         scrollView_text = (ScrollView)findViewById(R.id.scrollView_text);
         edit_title = (EditText)findViewById(R.id.memo_title_edit);
@@ -106,10 +109,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 builder.show();
             }
         });
-
-        imageView = (ImageView)findViewById(R.id.imgtest);
-       // PictureItem pictureItem = realm.where(PictureItem.class).equalTo("id",notepadId).findFirst();
-       // imageView.setImageURI(Uri.parse(pictureItem.getUri()));
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -202,14 +201,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
-    /*
-    @Override
-    public void onPause(){
-        super.onPause();
-        finish();
-    }
-
-     */
     @Override
     protected void onDestroy(){
         super.onDestroy();
@@ -258,15 +249,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (id){
             case android.R.id.home:
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        RealmResults<NotepadItem> notepadItems;
-                        notepadItems = realm.where(NotepadItem.class).findAll();
-                        RealmResults<PictureItem> pictureItems;
-                        pictureItems = realm.where(PictureItem.class).findAll();
-                    }
-                });
                 break;
             case R.id.done_menu:
                 saveMemo();
@@ -300,6 +282,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 pictureAdapter = new PictureAdapter(this,pictureItems);
                 gridview.setAdapter(pictureAdapter);
+            }
+
+            RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+            for(PictureItem pictureItem : items){
+                imageView = new ImageView(this);
+                imageView.setImageURI(Uri.parse(pictureItem.getUri()));
+                imageView.setId(notepadId);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                text_scroll_layout.addView(imageView);
             }
         }
     }
@@ -404,6 +395,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             });
+            text_scroll_layout.removeViews(2,text_scroll_layout.getChildCount() - 2);
+            RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+            for(PictureItem pictureItem : items){
+                imageView = new ImageView(this);
+                imageView.setImageURI(Uri.parse(pictureItem.getUri()));
+                imageView.setId(notepadId);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                text_scroll_layout.addView(imageView);
+            }
 
             supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
             scrollView_edit.setVisibility(View.GONE);

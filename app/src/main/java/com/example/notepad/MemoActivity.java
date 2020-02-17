@@ -9,10 +9,15 @@ import io.realm.RealmResults;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.PorterDuff;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +33,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.data.NotepadItem;
 import com.example.notepad.data.PictureItem;
@@ -35,7 +41,12 @@ import com.google.android.material.tabs.TabLayout;
 import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+
+import static com.bumptech.glide.load.resource.bitmap.TransformationUtils.rotateImage;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -269,7 +280,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }else{
             scrollView_edit.setVisibility(View.GONE);
             scrollView_text.setVisibility(View.VISIBLE);
-            tabLayout.setVisibility(View.INVISIBLE);
+            tabLayout.setVisibility(View.GONE);
             NotepadItem notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadId).findFirst();
             text_title.setText(notepadItem.getTitle_text());
             text_detail.setText(notepadItem.getDetail_text());
@@ -285,11 +296,16 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
-                imageView.setImageURI(Uri.parse(pictureItem.getUri()));
                 imageView.setId(notepadId);
+                imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                imageView.setPadding(20,0,20,40);
+                Glide.with(this)
+                        .load(Uri.parse(pictureItem.getUri()))
+                        .into(imageView);
                 text_scroll_layout.addView(imageView);
             }
         }
@@ -304,7 +320,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private void click_deleteTab(){
         AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
         builder.setTitle("안내");
-        builder.setMessage("사진을 전부 삭제하시겠습니까?");
+        builder.setMessage("첨부된 사진을 전부 삭제하시겠습니까?");
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -399,9 +415,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
-                imageView.setImageURI(Uri.parse(pictureItem.getUri()));
                 imageView.setId(notepadId);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                imageView.setAdjustViewBounds(true);
+                imageView.setPadding(20,0,20,40);
+                Glide.with(this)
+                        .load(Uri.parse(pictureItem.getUri()))
+                        .into(imageView);
                 text_scroll_layout.addView(imageView);
             }
 
@@ -412,7 +432,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             text_detail.setText(edit_detail.getText().toString());
             imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
             imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
-            tabLayout.setVisibility(View.INVISIBLE);
+            tabLayout.setVisibility(View.GONE);
             gridview.setVisibility(View.GONE);
             isEditMode = false;
         }
@@ -522,4 +542,5 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
+
 }

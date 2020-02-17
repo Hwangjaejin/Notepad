@@ -503,9 +503,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Uri image_uri = Uri.parse(editText.getText().toString());
-                pictureItems.add(image_uri);
-                pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
-                gridview.setAdapter(pictureAdapter);
+                if(pictureItems.contains(image_uri)) {
+                    Toast toast = Toast.makeText(getApplicationContext(),"중복된 이미지입니다.", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+                else {
+                    pictureItems.add(image_uri);
+                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                    gridview.setAdapter(pictureAdapter);
+                }
             }
         });
         builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {

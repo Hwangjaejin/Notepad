@@ -1,5 +1,6 @@
 package com.example.notepad;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -15,6 +16,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,6 +37,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.data.NotepadItem;
 import com.example.notepad.data.PictureItem;

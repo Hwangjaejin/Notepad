@@ -10,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.notepad.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
@@ -54,7 +55,7 @@ public class PictureAdapter extends BaseAdapter {
         ImageView imageView = (ImageView)view.findViewById(R.id.picture_view);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-        Picasso.with(mContext)
+        Glide.with(mContext)
                 .load(item_uri)
                 .into(imageView);
 

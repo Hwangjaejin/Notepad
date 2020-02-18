@@ -218,53 +218,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     }
     @Override
     public void onBackPressed(){
-        if(isEditMode) {
-            if(notepadId == NO_ID){
-                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
-                builder.setTitle("안내");
-                builder.setMessage("메모 작성을 취소 하시겠습니까?");
-                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent mainActivity = new Intent(MemoActivity.this, MainActivity.class);
-                        startActivity(mainActivity);
-                    }
-                });
-                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {}
-                });
-                builder.show();
-            }else{
-                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
-                builder.setTitle("안내");
-                builder.setMessage("메모 작성을 취소 하시겠습니까?");
-                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
-                        scrollView_edit.setVisibility(View.GONE);
-                        scrollView_text.setVisibility(View.VISIBLE);
-                        text_title.setText(edit_title.getText().toString());
-                        text_detail.setText(edit_detail.getText().toString());
-                        imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
-                        imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
-                        tabLayout.setVisibility(View.GONE);
-                        gridview.setVisibility(View.GONE);
-                        isEditMode = false;
-                    }
-                });
-                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {}
-                });
-                builder.show();
-            }
-        }else{
-            Intent mainActivity = new Intent(this, MainActivity.class);
-            startActivity(mainActivity);
-        }
-        finish();
+        backMemo();
     }
     @Override
     public void onClick(View v) {
@@ -410,6 +364,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                     public void onClick(DialogInterface dialog, int which) {
                         Intent mainActivity = new Intent(MemoActivity.this, MainActivity.class);
                         startActivity(mainActivity);
+                        finish();
                     }
                 });
                 builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -445,6 +400,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }else{
             Intent mainActivity = new Intent(this, MainActivity.class);
             startActivity(mainActivity);
+            finish();
         }
     }
     private void saveMemo(){

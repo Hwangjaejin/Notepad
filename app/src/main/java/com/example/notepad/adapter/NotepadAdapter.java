@@ -39,7 +39,7 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView img;
-        TextView title,detail;
+        TextView title,detail,time;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -47,6 +47,7 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
             img = itemView.findViewById(R.id.img_src);
             title = itemView.findViewById(R.id.text_title);
             detail = itemView.findViewById(R.id.text_detail);
+            time = itemView.findViewById(R.id.text_time);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -69,6 +70,7 @@ public class NotepadAdapter extends RecyclerView.Adapter<NotepadAdapter.ViewHold
 
         holder.title.setText(item.getTitle_text());
         holder.detail.setText(item.getDetail_text());
+        holder.time.setText(item.getDate());
     }
 
     @Override

@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             int id = notepadItems.get(i).getNotepadId();
             String title = notepadItems.get(i).getTitle_text();
             String detail = notepadItems.get(i).getDetail_text();
+            String time = notepadItems.get(i).getDate();
             String img_path;
             long img_count = realm.where(PictureItem.class).equalTo("id",id).count();
             if(img_count > 0){
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     id,
                     title,
                     detail,
+                    time,
                     img_path
             );
             items.add(item);

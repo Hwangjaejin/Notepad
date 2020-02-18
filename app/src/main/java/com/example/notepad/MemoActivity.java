@@ -3,14 +3,15 @@ package com.example.notepad;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PorterDuff;
@@ -42,11 +43,9 @@ import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-
-import static com.bumptech.glide.load.resource.bitmap.TransformationUtils.rotateImage;
+import java.util.Date;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -257,9 +256,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         int id = item.getItemId();
-
         switch (id){
             case android.R.id.home:
+                backMemo();
                 break;
             case R.id.done_menu:
                 saveMemo();
@@ -296,10 +295,8 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
-
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
-                imageView.setId(notepadId);
                 imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 imageView.setPadding(20,0,20,40);
@@ -358,9 +355,61 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+    private void backMemo(){
+        if(isEditMode) {
+            if(notepadId == NO_ID){
+                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+                builder.setTitle("안내");
+                builder.setMessage("메모 작성을 취소 하시겠습니까?");
+                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mainActivity = new Intent(MemoActivity.this, MainActivity.class);
+                        startActivity(mainActivity);
+                    }
+                });
+                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
+                builder.show();
+            }else{
+                AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
+                builder.setTitle("안내");
+                builder.setMessage("메모 작성을 취소 하시겠습니까?");
+                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행
+                        scrollView_edit.setVisibility(View.GONE);
+                        scrollView_text.setVisibility(View.VISIBLE);
+                        text_title.setText(edit_title.getText().toString());
+                        text_detail.setText(edit_detail.getText().toString());
+                        imm.hideSoftInputFromWindow(edit_detail.getWindowToken(), 0);
+                        imm.hideSoftInputFromWindow(edit_title.getWindowToken(), 0);
+                        tabLayout.setVisibility(View.GONE);
+                        gridview.setVisibility(View.GONE);
+                        isEditMode = false;
+                    }
+                });
+                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
+                builder.show();
+            }
+        }else{
+            Intent mainActivity = new Intent(this, MainActivity.class);
+            startActivity(mainActivity);
+        }
+    }
     private void saveMemo(){
         final String title = edit_title.getText().toString().trim();
         final String detail = edit_detail.getText().toString().trim();
+        long now = System.currentTimeMillis();
+        Date date = new Date(now);
+        SimpleDateFormat simpledate = new SimpleDateFormat("yyyy.MM.dd");
+        final String time = simpledate.format(date);
 
         if(title.getBytes().length <= 0){
             AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
@@ -397,10 +446,12 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         NotepadItem notepadItem = realm.createObject(NotepadItem.class, nextId.intValue());
                         notepadItem.setTitle_text(title);
                         notepadItem.setDetail_text(detail);
+                        notepadItem.setDate(time);
                     }else{
                         NotepadItem notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadId).findFirst();
                         notepadItem.setTitle_text(title);
                         notepadItem.setDetail_text(detail);
+                        notepadItem.setDate(time);
                     }
                     RealmResults<PictureItem> pictureitem = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
                     if(pictureitem.size() > 0) pictureitem.deleteAllFromRealm();
@@ -409,13 +460,14 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         pictureItem.setId(notepadId);
                         pictureItem.setUri(img_path.toString());
                     }
+
                 }
             });
             text_scroll_layout.removeViews(2,text_scroll_layout.getChildCount() - 2);
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
-                imageView.setId(notepadId);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 imageView.setAdjustViewBounds(true);
                 imageView.setPadding(20,0,20,40);

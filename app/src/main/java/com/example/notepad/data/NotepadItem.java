@@ -9,6 +9,7 @@ public class NotepadItem extends RealmObject{
     private int id;
     private String title_text;
     private String detail_text;
+    private String date;
     @Ignore
     private String imagePath;
 
@@ -29,6 +30,14 @@ public class NotepadItem extends RealmObject{
         this.id = id;
         this.title_text = title_text;
         this.detail_text = detail_text;
+        this.imagePath = imagePath;
+    }
+
+    public NotepadItem(int id, String title_text, String detail_text, String date, String imagePath) {
+        this.id = id;
+        this.title_text = title_text;
+        this.detail_text = detail_text;
+        this.date = date;
         this.imagePath = imagePath;
     }
 
@@ -62,5 +71,13 @@ public class NotepadItem extends RealmObject{
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 }

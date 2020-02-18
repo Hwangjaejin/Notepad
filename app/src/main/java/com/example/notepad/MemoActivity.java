@@ -42,6 +42,8 @@ import com.google.android.material.tabs.TabLayout;
 import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,7 +60,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private TabLayout tabLayout;
     private LinearLayout text_scroll_layout;
     private GridView gridview;
-    private ImageView imageView;
+    private ImageView imageView,img_test;
     private EditText edit_title,edit_detail;
     private TextView text_title,text_detail;
     private ScrollView scrollView_edit, scrollView_text;
@@ -95,6 +97,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         edit_detail.setOnClickListener(this);
         text_title = (TextView)findViewById(R.id.memo_title_text);
         text_detail = (TextView)findViewById(R.id.memo_detail_text);
+        img_test = (ImageView) findViewById(R.id.imgtest);
 
         gridview = (GridView)findViewById(R.id.gridview);
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -451,7 +454,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         NotepadItem notepadItem = realm.where(NotepadItem.class).equalTo("id",notepadId).findFirst();
                         notepadItem.setTitle_text(title);
                         notepadItem.setDetail_text(detail);
-                        notepadItem.setDate(time);
                     }
                     RealmResults<PictureItem> pictureitem = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
                     if(pictureitem.size() > 0) pictureitem.deleteAllFromRealm();
@@ -574,15 +576,28 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Uri image_uri = Uri.parse(editText.getText().toString());
+                final Uri image_uri = Uri.parse(editText.getText().toString());
                 if(pictureItems.contains(image_uri)) {
                     Toast toast = Toast.makeText(getApplicationContext(),"중복된 이미지입니다.", Toast.LENGTH_SHORT);
                     toast.show();
                 }
                 else {
-                    pictureItems.add(image_uri);
-                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
-                    gridview.setAdapter(pictureAdapter);
+                    Picasso.with(MemoActivity.this)
+                            .load(image_uri)
+                            .into(img_test, new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    pictureItems.add(image_uri);
+                                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
+                                    gridview.setAdapter(pictureAdapter);
+                                }
+
+                                @Override
+                                public void onError() {
+                                    Toast toast = Toast.makeText(MemoActivity.this.getApplicationContext(),"해당 이미지를 불러올 수 없습니다.", Toast.LENGTH_SHORT);
+                                    toast.show();
+                                }
+                            });
                 }
             }
         });

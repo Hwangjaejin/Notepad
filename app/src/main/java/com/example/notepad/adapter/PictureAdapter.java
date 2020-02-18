@@ -2,16 +2,21 @@ package com.example.notepad.adapter;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.notepad.R;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+
+import static io.realm.internal.SyncObjectServerFacade.getApplicationContext;
 
 public class PictureAdapter extends BaseAdapter {
     public ArrayList<Uri> items;
@@ -51,7 +56,6 @@ public class PictureAdapter extends BaseAdapter {
 
         Picasso.with(mContext)
                 .load(item_uri)
-                .error(R.drawable.ic_clear_red_24dp)
                 .into(imageView);
 
         return view;

@@ -111,6 +111,11 @@
                     android:layout_weight="1">
                 </EditText>
 
+                <ImageView
+                    android:id="@+id/imgtest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"/>
                 <GridView
                     android:id="@+id/gridview"
                     android:layout_width="match_parent"

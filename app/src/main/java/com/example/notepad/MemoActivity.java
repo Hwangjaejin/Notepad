@@ -264,6 +264,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             Intent mainActivity = new Intent(this, MainActivity.class);
             startActivity(mainActivity);
         }
+        finish();
     }
     @Override
     public void onClick(View v) {

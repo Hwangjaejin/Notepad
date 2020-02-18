@@ -53,7 +53,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onPause();
         finish();
     }
-
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
     @Override
     protected void onDestroy(){
         super.onDestroy();

@@ -25,6 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:usesCleartextTraffic="true">
+        <activity android:name=".ImageActivity"></activity>
         <activity
             android:name=".MemoActivity"
             android:windowSoftInputMode="adjustResize" />

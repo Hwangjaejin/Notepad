@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -57,6 +58,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private PictureAdapter pictureAdapter;
     private ArrayList<Uri> pictureItems = new ArrayList<>(); // 현재 저장되어 있는 모든 이미지 주소
     private ArrayList<Uri> imagePaths = new ArrayList<>(); // 새로 가져온 이미지 주소
+    private ArrayList<ImageView> imageviewlist;
     private InputMethodManager imm;
     private int delete_img_pos;
     private int notepadId;
@@ -237,6 +239,16 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
+    private View.OnClickListener imageClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            int id = v.getId();
+            Intent ImageActivity = new Intent(MemoActivity.this, ImageActivity.class);
+            ImageActivity.putExtra("id",id);
+            ImageActivity.putParcelableArrayListExtra("pictureList",pictureItems);
+            startActivity(ImageActivity);
+        }
+    };
     private void initMemo(){
         if(isEditMode){
             scrollView_edit.setVisibility(View.VISIBLE);
@@ -261,8 +273,11 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
+            imageviewlist = new ArrayList<>();
+            int idx = 0;
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
+                imageView.setId(idx);
                 imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 imageView.setPadding(20,0,20,40);
@@ -270,6 +285,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         .load(Uri.parse(pictureItem.getUri()))
                         .into(imageView);
                 text_scroll_layout.addView(imageView);
+                imageviewlist.add(imageView);
+                imageviewlist.get(idx).setOnClickListener(imageClickListener);
+                idx++;
             }
         }
     }
@@ -433,8 +451,11 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             text_scroll_layout.removeViews(2,text_scroll_layout.getChildCount() - 2);
             RealmResults<PictureItem> items = realm.where(PictureItem.class).equalTo("id",notepadId).findAll();
 
+            imageviewlist = new ArrayList<>();
+            int idx = 0;
             for(PictureItem pictureItem : items){
                 imageView = new ImageView(this);
+                imageView.setId(idx);
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 imageView.setAdjustViewBounds(true);
                 imageView.setPadding(20,0,20,40);
@@ -442,6 +463,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                         .load(Uri.parse(pictureItem.getUri()))
                         .into(imageView);
                 text_scroll_layout.addView(imageView);
+                imageviewlist.add(imageView);
+                imageviewlist.get(idx).setOnClickListener(imageClickListener);
+                idx++;
             }
 
             supportInvalidateOptionsMenu(); // onPrepareOptionsMenu 실행

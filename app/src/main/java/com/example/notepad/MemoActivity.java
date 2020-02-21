@@ -1,31 +1,20 @@
 package com.example.notepad;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import io.realm.Realm;
 import io.realm.RealmResults;
-
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -35,12 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.example.notepad.adapter.PictureAdapter;
 import com.example.notepad.data.NotepadItem;
 import com.example.notepad.data.PictureItem;
@@ -50,7 +34,6 @@ import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.sangcomz.fishbun.define.Define;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -71,15 +54,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private TextView text_title,text_detail;
     private ScrollView scrollView_edit, scrollView_text;
     private Toolbar toolbar;
-    private boolean menu_flag = false;
     private PictureAdapter pictureAdapter;
     private ArrayList<Uri> pictureItems = new ArrayList<>(); // 현재 저장되어 있는 모든 이미지 주소
     private ArrayList<Uri> imagePaths = new ArrayList<>(); // 새로 가져온 이미지 주소
     private InputMethodManager imm;
     private int delete_img_pos;
-    private boolean isEditMode;
     private int notepadId;
+    private boolean isEditMode;
     private boolean isImgDup = false;
+    private boolean menu_flag = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -191,30 +174,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     pictureAdapter = new PictureAdapter(this,pictureItems);
                     gridview.setAdapter(pictureAdapter);
-
-                    gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(MemoActivity.this);
-                            builder.setTitle("안내");
-                            builder.setMessage("첨부된 사진을 삭제하시겠습니까?");
-                            delete_img_pos = position;
-                            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    pictureItems.remove(delete_img_pos);
-                                    pictureAdapter = new PictureAdapter(MemoActivity.this,pictureItems);
-                                    gridview.setAdapter(pictureAdapter);
-                                }
-                            });
-                            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {}
-                            });
-                            builder.show();
-
-                        }
-                    });
                 }
                 break;
         }
@@ -534,7 +493,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 edit_title.setFocusable(true);
                 edit_title.requestFocus();
                 imm.showSoftInput(edit_title,0);
-                gridview.setVisibility(View.GONE);
+                gridview.setVisibility(View.VISIBLE);
             }
         });
         edit_title.setText(text_title.getText().toString());
